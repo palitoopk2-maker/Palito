@@ -1,1008 +1,785 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parsahutaon Palito PK2</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <style>
-        .batak-pattern {
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23dc2626' fill-opacity='0.1'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm0 0c0 11.046 8.954 20 20 20s20-8.954 20-20-8.954-20-20-20-20 8.954-20 20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        .admin-hidden { display: none; }
-        .admin-visible { display: block; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parsahutaon Palito PK2</title>
+  <meta name="description" content="Organisasi Parsahutaon Palito PK2 | Budaya Batak, Keagamaan, Sosial" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --red:#EF4444;
+      --dark:black;
+      --light:#ffffff;
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+    /* Subtle animated gradient background */
+    .bg-stripes {
+      background: radial-gradient(1200px 500px at -10% -20%, rgba(239,68,68,0.18), transparent 60%),
+                  radial-gradient(1200px 500px at 110% 130%, rgba(239,68,68,0.20), transparent 60%),
+                  linear-gradient(180deg, #0a0a0a 0%, #0e0e0e 100%);
+    }
+    /* Ulos-inspired divider */
+    .ulos-divider {
+      background-image:
+        linear-gradient(45deg, rgba(239,68,68,0.8) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(239,68,68,0.8) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(239,68,68,0.8) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(239,68,68,0.8) 75%);
+      background-size: 22px 22px;
+      background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+      height: 10px;
+    }
+    /* Smooth fade */
+    .fade-in { animation: fade .5s ease forwards; opacity: 0; }
+    @keyframes fade { to { opacity: 1; } }
+
+    /* Hide admin controls by default; JS will toggle */
+    .admin-only.hidden { display: none !important; }
+    /* Gallery viewer */
+    .viewer-open { overflow: hidden; }
+  </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Admin Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Admin Login</h3>
-                    <button onclick="closeLoginModal()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form onsubmit="adminLogin(event)">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Admin</label>
-                        <input type="email" id="adminEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" required>
-                    </div>
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        <input type="password" id="adminPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" required>
-                    </div>
-                    <button type="submit" class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition duration-200">
-                        Login
-                    </button>
-                </form>
-                <div class="mt-4 text-center">
-                    <button onclick="forgotPassword()" class="text-sm text-red-600 hover:text-red-800">Lupa Password?</button>
-                </div>
-            </div>
+<body class="bg-stripes text-white">
+  <!-- Top Alert for Demo Mode Info (appears only when admin is on) -->
+  <div id="adminBanner" class="admin-only hidden w-full bg-red-600/20 backdrop-blur px-4 py-2 text-sm text-red-100 border-b border-red-500/40">
+    Mode Admin (Demo) aktif. Perubahan disimpan di perangkat ini saja dan tidak meminta kata sandi.
+  </div>
+
+  <!-- Header -->
+  <header class="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <!-- Logo -->
+        <div class="relative">
+          <div class="w-16 h-16 rounded-full bg-black/70 border border-red-500/60 flex items-center justify-center overflow-hidden shadow-lg">
+            <img id="orgLogo" alt="Logo" class="w-full h-full object-cover hidden" />
+            <!-- Placeholder initials -->
+            <span id="logoInitials" class="font-extrabold text-xl text-red-400">PP</span>
+          </div>
+          <button id="btnUploadLogo" class="admin-only hidden absolute -bottom-2 left-1/2 -translate-x-1/2 text-[11px] bg-red-600 hover:bg-red-500 text-white px-2 py-0.5 rounded-full border border-red-400/60 shadow">
+            Ubah Logo
+          </button>
+          <input id="inputLogo" type="file" accept="image/*" class="hidden" />
         </div>
+        <!-- Title -->
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+            Parsahutaon Palito PK2
+          </h1>
+          <p class="text-red-300/90 text-sm md:text-base">Budaya Batak • Keagamaan • Sosial</p>
+          <div class="flex flex-wrap gap-3 mt-2 text-xs md:text-sm text-white/80">
+            <span class="inline-flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8 2 5 5.1 5 9.3c0 5.6 7 12.4 7 12.4s7-6.8 7-12.4C19 5.1 16 2 12 2z" stroke="currentColor" stroke-width="1.5"></path><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"></circle></svg>
+              Perumahan Pesona Kahuripan 2, Cikahuripan
+            </span>
+            <a href="mailto:palitoopk2@gmail.com" class="inline-flex items-center gap-1 hover:text-red-300 transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5h18v14H3z" stroke="currentColor" stroke-width="1.5"></path><path d="M3 7l9 6 9-6" stroke="currentColor" stroke-width="1.5"></path></svg>
+              palitoopk2@gmail.com
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Admin buttons -->
+      <div class="flex items-center gap-2">
+        <button id="btnAdmin" class="text-xs md:text-sm bg-white/10 hover:bg-white/15 text-white px-3 py-2 rounded-lg border border-white/15">
+          Masuk Admin (Demo)
+        </button>
+        <button id="btnLogout" class="admin-only hidden text-xs md:text-sm bg-white/10 hover:bg-white/15 text-white px-3 py-2 rounded-lg border border-white/15">
+          Keluar
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- Header -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center relative overflow-hidden">
-                        <img id="logoImage" src="" alt="Logo" class="w-full h-full object-cover hidden">
-                        <i class="fas fa-church text-white text-2xl" id="defaultLogo"></i>
-                        <input type="file" id="logoUpload" accept="image/*" class="admin-hidden absolute inset-0 opacity-0 cursor-pointer">
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Parsahutaon Palito PK2</h1>
-                        <p class="text-gray-600">Organisasi Budaya Batak, Keagamaan, dan Sosial</p>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="adminLoginBtn" onclick="openLoginModal()" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200">
-                        <i class="fas fa-user-shield mr-2"></i>Admin
-                    </button>
-                    <button id="adminLogoutBtn" onclick="adminLogout()" class="admin-hidden bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-200">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </button>
-                </div>
-            </div>
+  <!-- Hero / Cover -->
+  <section class="relative max-w-7xl mx-auto px-4 md:px-8">
+    <div class="relative rounded-2xl overflow-hidden border border-red-500/30 shadow-xl">
+      <div id="coverWrap" class="relative h-[220px] md:h-[360px] bg-gradient-to-br from-red-900/40 to-black">
+        <img id="coverImage" class="absolute inset-0 w-full h-full object-cover hidden" alt="Foto Halaman" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+        <div class="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
+          <div class="inline-flex items-center gap-2 bg-black/60 px-4 py-2 rounded-full border border-white/10 text-white/90 text-sm">
+            <span class="inline-block w-2 h-2 rounded-full bg-red-400"></span>
+            Komunitas Parsahutaon Palito PK2
+          </div>
+          <h2 class="mt-3 text-2xl md:text-4xl font-bold">Merajut Persaudaraan, Iman, dan Budaya</h2>
+          <p class="mt-1 text-white/80 text-sm md:text-base">Bersama dalam pelayanan, kebersamaan, dan pelestarian budaya Batak.</p>
         </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="relative bg-gradient-to-r from-red-600 to-red-800 text-white py-20 batak-pattern">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
-        <div class="container mx-auto px-4 relative z-10">
-            <div class="text-center">
-                <div class="mb-8 relative">
-                    <img id="heroImage" src="" alt="Hero Image" class="w-full h-64 object-cover rounded-lg shadow-lg hidden">
-                    <div id="defaultHero" class="w-full h-64 bg-black bg-opacity-30 rounded-lg shadow-lg flex items-center justify-center">
-                        <div class="text-center">
-                            <i class="fas fa-users text-6xl mb-4"></i>
-                            <p class="text-xl">Selamat Datang di Parsahutaon Palito PK2</p>
-                        </div>
-                    </div>
-                    <input type="file" id="heroUpload" accept="image/*" class="admin-hidden absolute inset-0 opacity-0 cursor-pointer">
-                </div>
-                <h2 class="text-4xl font-bold mb-4">Horas! Selamat Datang</h2>
-                <p class="text-xl mb-8">Memperkuat persaudaraan dalam budaya Batak, iman, dan kepedulian sosial</p>
-                <div class="bg-white bg-opacity-20 rounded-lg p-6 max-w-2xl mx-auto">
-                    <p class="text-lg"><i class="fas fa-map-marker-alt mr-2"></i>Perumahan Pesona Kahuripan 2 Cikahuripan</p>
-                    <p class="text-lg"><i class="fas fa-envelope mr-2"></i>palitoopk2@gmail.com</p>
-                </div>
-            </div>
+      </div>
+      <div class="ulos-divider"></div>
+      <div class="p-4 md:p-6 flex items-center justify-between">
+        <div class="text-white/80 text-sm">Foto halaman dapat diubah oleh admin.</div>
+        <div class="flex items-center gap-2">
+          <button id="btnUploadCover" class="admin-only hidden bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm border border-red-400/60">Ubah Foto Halaman</button>
+          <input id="inputCover" type="file" accept="image/*" class="hidden" />
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-center space-x-8 py-4">
-                <button onclick="showSection('home')" class="nav-btn text-gray-700 hover:text-red-600 font-medium transition duration-200 border-b-2 border-red-600">Beranda</button>
-                <button onclick="showSection('structure')" class="nav-btn text-gray-700 hover:text-red-600 font-medium transition duration-200">Struktur Organisasi</button>
-                <button onclick="showSection('programs')" class="nav-btn text-gray-700 hover:text-red-600 font-medium transition duration-200">Program</button>
-                <button onclick="showSection('gallery')" class="nav-btn text-gray-700 hover:text-red-600 font-medium transition duration-200">Galeri</button>
-                <button onclick="showSection('documents')" class="nav-btn text-gray-700 hover:text-red-600 font-medium transition duration-200">Dokumen</button>
-            </div>
+  <!-- Nav -->
+  <nav class="max-w-7xl mx-auto px-4 md:px-8 mt-8">
+    <div class="flex flex-wrap gap-3">
+      <a href="#pengurus" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm">Kepengurusan</a>
+      <a href="#program" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm">Program</a>
+      <a href="#galeri" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm">Galeri</a>
+      <a href="#dokumen" class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm">Dokumen</a>
+    </div>
+  </nav>
+
+  <!-- Kepengurusan -->
+  <section id="pengurus" class="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl md:text-2xl font-bold">Struktur Kepengurusan</h3>
+      <div class="flex items-center gap-2">
+        <button id="btnTambahPengurus" class="admin-only hidden bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm border border-red-400/60">Tambah Pengurus</button>
+      </div>
+    </div>
+    <p class="text-white/70 text-sm mb-4">Nama-nama dapat ditambah atau diedit oleh admin.</p>
+    <div id="listPengurus" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </section>
+
+  <!-- Program -->
+  <section id="program" class="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl md:text-2xl font-bold">Program Kegiatan</h3>
+      <div class="flex items-center gap-2">
+        <button id="btnTambahProgram" class="admin-only hidden bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm border border-red-400/60">Tambah Program</button>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <h4 class="font-semibold text-red-300 mb-3">Bulanan</h4>
+        <ul id="programBulanan" class="space-y-3"></ul>
+      </div>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <h4 class="font-semibold text-red-300 mb-3">Tahunan</h4>
+        <ul id="programTahunan" class="space-y-3"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Galeri -->
+  <section id="galeri" class="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl md:text-2xl font-bold">Galeri Kegiatan</h3>
+      <div class="flex items-center gap-2">
+        <button id="btnTambahFoto" class="admin-only hidden bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm border border-red-400/60">Tambah Foto</button>
+        <input id="inputFotoGaleri" type="file" multiple accept="image/*" class="hidden" />
+      </div>
+    </div>
+    <p class="text-white/70 text-sm mb-4">Satu album berisi foto-foto kegiatan.</p>
+    <div id="gridGaleri" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+  </section>
+
+  <!-- Dokumen -->
+  <section id="dokumen" class="max-w-7xl mx-auto px-4 md:px-8 mt-12 mb-16">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl md:text-2xl font-bold">Dokumen Organisasi</h3>
+      <div class="flex items-center gap-2">
+        <button id="btnUploadDok" class="admin-only hidden bg-red-600 hover:bg-red-500 px-3 py-2 rounded-lg text-sm border border-red-400/60">Unggah Dokumen</button>
+        <input id="inputDokumen" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt" class="hidden" />
+      </div>
+    </div>
+    <p class="text-white/70 text-sm mb-4">AD/ART, surat keputusan, dan lainnya. Dapat diunduh pengunjung.</p>
+    <ul id="listDokumen" class="space-y-3"></ul>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="font-semibold">Parsahutaon Palito PK2</div>
+          <div class="text-white/70 text-sm">
+            Perumahan Pesona Kahuripan 2, Cikahuripan •
+            <a class="hover:text-red-300" href="mailto:palitoopk2@gmail.com">palitoopk2@gmail.com</a>
+          </div>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Home Section -->
-        <section id="home" class="section-content">
-            <div class="grid md:grid-cols-2 gap-8 mb-12">
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 text-red-600">Tentang Kami</h3>
-                    <p class="text-gray-700 leading-relaxed">
-                        Parsahutaon Palito PK2 adalah organisasi yang menghimpun masyarakat Batak di Perumahan Pesona Kahuripan 2 Cikahuripan. 
-                        Kami berkomitmen untuk melestarikan budaya Batak, memperkuat iman Kristiani, dan membangun kepedulian sosial di antara sesama.
-                    </p>
-                </div>
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 text-red-600">Visi & Misi</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-900">Visi:</h4>
-                            <p class="text-gray-700">Menjadi wadah persaudaraan yang kuat dalam budaya, iman, dan sosial.</p>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900">Misi:</h4>
-                            <ul class="text-gray-700 list-disc list-inside space-y-1">
-                                <li>Melestarikan budaya dan adat Batak</li>
-                                <li>Memperkuat iman dan kehidupan rohani</li>
-                                <li>Membangun kepedulian sosial</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Structure Section -->
-        <section id="structure" class="section-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-red-600">Struktur Kepengurusan</h3>
-                    <button onclick="editStructure()" class="admin-hidden bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                        <i class="fas fa-edit mr-2"></i>Edit
-                    </button>
-                </div>
-                
-                <div id="structureContent" class="space-y-6">
-                    <!-- Dewan Penasehat -->
-                    <div class="border-l-4 border-red-600 pl-4">
-                        <h4 class="text-xl font-bold text-gray-900 mb-3">DEWAN PENASEHAT</h4>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang R. Simanjuntak (op. Sena)</h5>
-                                        <p class="text-gray-600">Dewan Penasehat</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang B. Manalu</h5>
-                                        <p class="text-gray-600">Dewan Penasehat</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang A. Purba</h5>
-                                        <p class="text-gray-600">Dewan Penasehat</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang S. Naenggolan</h5>
-                                        <p class="text-gray-600">Dewan Penasehat</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pengurus Inti -->
-                    <div class="border-l-4 border-red-600 pl-4">
-                        <h4 class="text-xl font-bold text-gray-900 mb-3">PENGURUS INTI</h4>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div class="bg-red-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-red-200 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-crown text-red-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">R. Simanjuntak</h5>
-                                        <p class="text-red-600 font-medium">Ketua</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang A. Manalu</h5>
-                                        <p class="text-gray-600">Wakil Ketua</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Amang I. Siagian</h5>
-                                        <p class="text-gray-600">Sekretaris</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Inang Ny. R. Aritonang/br Sitorus</h5>
-                                        <p class="text-gray-600">Bendahara 1</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-semibold">Inang Ny H. Simbolon/br Sinurat</h5>
-                                        <p class="text-gray-600">Bendahara 2</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seksi-seksi -->
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <!-- Seksi Rohani -->
-                        <div class="border-l-4 border-blue-600 pl-4">
-                            <h4 class="text-lg font-bold text-gray-900 mb-3">SEKSI ROHANI</h4>
-                            <div class="space-y-3">
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-pray text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Inang Ny. M.S/br. Batubara</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-blue-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-pray text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Inang Ny. S. Naenggolan/br. Purba</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Seksi Sosial -->
-                        <div class="border-l-4 border-green-600 pl-4">
-                            <h4 class="text-lg font-bold text-gray-900 mb-3">SEKSI SOSIAL</h4>
-                            <div class="space-y-3">
-                                <div class="bg-green-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-hands-helping text-green-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Inang Ny. I. Siagian/br. Panjaitan</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-green-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-hands-helping text-green-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Inang Ny. A. Purba/br. Sitohang</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Seksi Adat -->
-                        <div class="border-l-4 border-yellow-600 pl-4">
-                            <h4 class="text-lg font-bold text-gray-900 mb-3">SEKSI ADAT</h4>
-                            <div class="bg-yellow-50 p-3 rounded-lg">
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-drum text-yellow-600"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="font-medium">Amang T. Nababan</h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Humas -->
-                        <div class="border-l-4 border-purple-600 pl-4">
-                            <h4 class="text-lg font-bold text-gray-900 mb-3">HUMAS</h4>
-                            <div class="space-y-3">
-                                <div class="bg-purple-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-bullhorn text-purple-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Amang H. Simangusong</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bg-purple-50 p-3 rounded-lg">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-bullhorn text-purple-600"></i>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-medium">Amang P. Situmorang</h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Programs Section -->
-        <section id="programs" class="section-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-red-600">Program Kegiatan</h3>
-                    <button onclick="editPrograms()" class="admin-hidden bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                        <i class="fas fa-edit mr-2"></i>Edit Program
-                    </button>
-                </div>
-                
-                <div id="programsContent" class="grid md:grid-cols-2 gap-6">
-                    <!-- Program Bulanan -->
-                    <div class="border-l-4 border-blue-600 pl-4">
-                        <h4 class="text-xl font-bold text-gray-900 mb-4">Program Bulanan</h4>
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <i class="fas fa-coins text-blue-600 text-xl"></i>
-                                    <h5 class="font-semibold text-gray-900">Arisan Bulanan</h5>
-                                </div>
-                                <p class="text-gray-700">Kegiatan arisan rutin setiap bulan untuk mempererat silaturahmi dan membantu kebutuhan anggota.</p>
-                            </div>
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <i class="fas fa-pray text-blue-600 text-xl"></i>
-                                    <h5 class="font-semibold text-gray-900">Persekutuan Doa</h5>
-                                </div>
-                                <p class="text-gray-700">Ibadah bersama dan persekutuan doa untuk memperkuat iman dan kehidupan rohani.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Program Tahunan -->
-                    <div class="border-l-4 border-red-600 pl-4">
-                        <h4 class="text-xl font-bold text-gray-900 mb-4">Program Tahunan</h4>
-                        <div class="space-y-4">
-                            <div class="bg-red-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <i class="fas fa-star text-red-600 text-xl"></i>
-                                    <h5 class="font-semibold text-gray-900">Perayaan Natal</h5>
-                                </div>
-                                <p class="text-gray-700">Perayaan Natal bersama dengan acara ibadah, makan bersama, dan pertunjukan budaya.</p>
-                            </div>
-                            <div class="bg-red-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <i class="fas fa-calendar-alt text-red-600 text-xl"></i>
-                                    <h5 class="font-semibold text-gray-900">Bona Taon (Tahun Baru)</h5>
-                                </div>
-                                <p class="text-gray-700">Perayaan tahun baru dengan tradisi Batak dan doa syukur untuk tahun yang baru.</p>
-                            </div>
-                            <div class="bg-red-50 p-4 rounded-lg">
-                                <div class="flex items-center space-x-3 mb-2">
-                                    <i class="fas fa-drum text-red-600 text-xl"></i>
-                                    <h5 class="font-semibold text-gray-900">Festival Budaya Batak</h5>
-                                </div>
-                                <p class="text-gray-700">Pertunjukan seni dan budaya Batak untuk melestarikan warisan leluhur.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Gallery Section -->
-        <section id="gallery" class="section-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-red-600">Galeri Kegiatan</h3>
-                    <button onclick="uploadGallery()" class="admin-hidden bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                        <i class="fas fa-upload mr-2"></i>Upload Foto
-                    </button>
-                </div>
-                
-                <div id="galleryContent" class="grid md:grid-cols-3 gap-4">
-                    <div class="bg-gray-100 rounded-lg p-8 text-center">
-                        <i class="fas fa-images text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-600">Belum ada foto kegiatan</p>
-                        <p class="text-sm text-gray-500 mt-2">Admin dapat mengunggah foto melalui tombol Upload Foto</p>
-                    </div>
-                </div>
-                <input type="file" id="galleryUpload" multiple accept="image/*" class="hidden">
-            </div>
-        </section>
-
-        <!-- Documents Section -->
-        <section id="documents" class="section-content hidden">
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-red-600">Dokumen Organisasi</h3>
-                    <button onclick="uploadDocument()" class="admin-hidden bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                        <i class="fas fa-upload mr-2"></i>Upload Dokumen
-                    </button>
-                </div>
-                
-                <div id="documentsContent" class="space-y-4">
-                    <div class="bg-gray-100 rounded-lg p-8 text-center">
-                        <i class="fas fa-file-alt text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-600">Belum ada dokumen</p>
-                        <p class="text-sm text-gray-500 mt-2">Admin dapat mengunggah dokumen seperti AD/RT, Surat Keputusan, dll</p>
-                    </div>
-                </div>
-                <input type="file" id="documentUpload" accept=".pdf,.doc,.docx" class="hidden">
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8 mt-12">
-        <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-3 gap-8">
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Parsahutaon Palito PK2</h4>
-                    <p class="text-gray-300">Organisasi Budaya Batak, Keagamaan, dan Sosial di Perumahan Pesona Kahuripan 2 Cikahuripan</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Kontak</h4>
-                    <div class="space-y-2 text-gray-300">
-                        <p><i class="fas fa-map-marker-alt mr-2"></i>Perumahan Pesona Kahuripan 2 Cikahuripan</p>
-                        <p><i class="fas fa-envelope mr-2"></i>palitoopk2@gmail.com</p>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="text-lg font-bold mb-4">Ikuti Kami</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white transition duration-200">
-                            <i class="fab fa-facebook-f text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-300 hover:text-white transition duration-200">
-                            <i class="fab fa-instagram text-xl"></i>
-                        </a>
-                        <a href="#" class="text-gray-300 hover:text-white transition duration-200">
-                            <i class="fab fa-whatsapp text-xl"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
-                <p>&copy; 2024 Parsahutaon Palito PK2. Horas!</p>
-            </div>
+        <div class="text-white/60 text-sm">
+          © <span id="year"></span> Parsahutaon Palito PK2 • Dibuat dengan cinta
         </div>
-    </footer>
+      </div>
+    </div>
+  </footer>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "demo-api-key",
-            authDomain: "palito-pk2-demo.firebaseapp.com",
-            projectId: "palito-pk2-demo",
-            storageBucket: "palito-pk2-demo.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "demo-app-id"
-        };
+  <!-- Admin Modal (Demo) -->
+  <div id="modalAdmin" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center p-4 hidden z-50">
+    <div class="max-w-md w-full bg-neutral-900 rounded-2xl border border-white/10 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="font-semibold">Masuk Admin (Demo)</h4>
+        <button id="closeAdminModal" class="text-white/70 hover:text-white">✕</button>
+      </div>
+      <p class="text-white/70 text-sm mb-3">
+        Hanya gunakan email terdaftar. Tidak ada kata sandi. Ini adalah tampilan demo yang berjalan di perangkat ini saja.
+      </p>
+      <label class="block text-sm mb-1">Email Admin</label>
+      <input id="adminEmail" type="email" placeholder="contoh: palitoopk2@gmail.com" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+      <div class="flex items-center justify-end gap-2 mt-4">
+        <button id="btnAdminBatal" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10">Batal</button>
+        <button id="btnAdminMasuk" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 border border-red-400/60">Masuk</button>
+      </div>
+      <div id="adminMsg" class="text-sm text-red-300 mt-3 hidden">Email tidak cocok. Gunakan email terdaftar.</div>
+    </div>
+  </div>
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const storage = firebase.storage();
-        const firestore = firebase.firestore();
-        const auth = firebase.auth();
+  <!-- Reusable Small Modal -->
+  <div id="modalBase" class="fixed inset-0 bg-black/60 backdrop-blur-sm items-center justify-center p-4 hidden z-40">
+    <div class="max-w-md w-full bg-neutral-900 rounded-2xl border border-white/10 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h4 id="modalTitle" class="font-semibold">Form</h4>
+        <button id="closeBaseModal" class="text-white/70 hover:text-white">✕</button>
+      </div>
+      <div id="modalContent" class="space-y-3"></div>
+      <div class="flex items-center justify-end gap-2 mt-4">
+        <button id="modalCancel" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10">Batal</button>
+        <button id="modalSave" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 border border-red-400/60">Simpan</button>
+      </div>
+    </div>
+  </div>
 
-        // Admin authentication
-        let isAdminLoggedIn = false;
-        const ADMIN_EMAIL = 'palitoopk2@gmail.com';
-        const ADMIN_PASSWORD = 'admin123';
+  <!-- Viewer for Gallery -->
+  <div id="viewer" class="fixed inset-0 hidden items-center justify-center bg-black/90 z-50">
+    <button id="viewerClose" class="absolute top-4 right-4 bg-white/10 border border-white/15 text-white rounded-full px-3 py-2">Tutup</button>
+    <button id="viewerPrev" class="absolute left-4 md:left-8 bg-white/10 border border-white/15 text-white rounded-full px-3 py-2">‹</button>
+    <button id="viewerNext" class="absolute right-4 md:right-8 bg-white/10 border border-white/15 text-white rounded-full px-3 py-2">›</button>
+    <img id="viewerImg" class="max-h-[82vh] max-w-[92vw] rounded-xl border border-white/10 shadow-2xl" alt="Foto" />
+  </div>
 
-        // Check if admin is logged in on page load
-        if (localStorage.getItem('adminLoggedIn') === 'true') {
-            isAdminLoggedIn = true;
-            showAdminFeatures();
-        }
+  <script>
+    // --- Data & State ---
+    const ADMIN_EMAIL = "palitoopk2@gmail.com";
+    const STORAGE_KEY = "parsahutaon_palito_pk2_site";
 
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-        }
+    const $ = (sel, parent=document) => parent.querySelector(sel);
+    const $$ = (sel, parent=document) => Array.from(parent.querySelectorAll(sel));
+    const byId = id => document.getElementById(id);
 
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('adminEmail').value = '';
-            document.getElementById('adminPassword').value = '';
-        }
+    function loadData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+      // Default data including structure names provided
+      return {
+        logo: null,
+        cover: null,
+        pengurus: [
+          // Dewan Penasehat
+          { id: uid(), name: "Amang R. Simanjuntak (op. Sena)", role: "Dewan Penasehat", photo: null },
+          { id: uid(), name: "Amang B. Manalu", role: "Dewan Penasehat", photo: null },
+          { id: uid(), name: "Amang A. Purba", role: "Dewan Penasehat", photo: null },
+          { id: uid(), name: "Amang S. Naenggolan", role: "Dewan Penasehat", photo: null },
 
-        function adminLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('adminEmail').value.trim();
-            const password = document.getElementById('adminPassword').value;
+          // Inti
+          { id: uid(), name: "R. Simanjuntak", role: "Ketua", photo: null },
+          { id: uid(), name: "Amang A. Manalu", role: "Wakil Ketua", photo: null },
+          { id: uid(), name: "Amang I. Siagian", role: "Sekretaris", photo: null },
+          { id: uid(), name: "Inang Ny. R. Aritonang / br. Sitorus", role: "Bendahara 1", photo: null },
+          { id: uid(), name: "Inang Ny. H. Simbolon / br. Sinurat", role: "Bendahara 2", photo: null },
 
-            // Check if email is the authorized admin email
-            if (email !== ADMIN_EMAIL) {
-                alert('Akses ditolak! Hanya pemilik akun ' + ADMIN_EMAIL + ' yang dapat login sebagai admin.');
-                return;
-            }
+          // Seksi Rohani
+          { id: uid(), name: "Inang Ny. M.S / br. Batubara", role: "Seksi Rohani", photo: null },
+          { id: uid(), name: "Inang Ny. S. Naenggolan / br. Purba", role: "Seksi Rohani", photo: null },
 
-            // Simple password check (in real implementation, use proper authentication)
-            if (password === ADMIN_PASSWORD || localStorage.getItem('adminNewPassword') === password) {
-                isAdminLoggedIn = true;
-                localStorage.setItem('adminLoggedIn', 'true');
-                localStorage.setItem('adminEmail', email);
-                showAdminFeatures();
-                closeLoginModal();
-                alert('Login berhasil! Selamat datang Admin.');
-            } else {
-                alert('Password salah. Silakan coba lagi atau gunakan fitur Lupa Password.');
-            }
-        }
+          // Seksi Sosial
+          { id: uid(), name: "Inang Ny. I. Siagian / br. Panjaitan", role: "Seksi Sosial", photo: null },
+          { id: uid(), name: "Inang Ny. A. Purba / br. Sitohang", role: "Seksi Sosial", photo: null },
 
-        function adminLogout() {
-            isAdminLoggedIn = false;
-            localStorage.removeItem('adminLoggedIn');
-            hideAdminFeatures();
-            alert('Logout berhasil.');
-        }
+          // Seksi Adat
+          { id: uid(), name: "Amang T. Nababan", role: "Seksi Adat", photo: null },
 
-        function showAdminFeatures() {
-            document.getElementById('adminLoginBtn').classList.add('hidden');
-            document.getElementById('adminLogoutBtn').classList.remove('hidden');
-            
-            const adminElements = document.querySelectorAll('.admin-hidden');
-            adminElements.forEach(el => {
-                el.classList.remove('admin-hidden');
-                el.classList.add('admin-visible');
-            });
-        }
+          // Humas
+          { id: uid(), name: "Amang H. Simangusong", role: "Humas", photo: null },
+          { id: uid(), name: "Amang P. Situmorang", role: "Humas", photo: null },
+        ],
+        program: {
+          bulanan: [
+            { id: uid(), title: "Arisan Bulanan", date: "" },
+            { id: uid(), title: "Persekutuan Doa", date: "" },
+          ],
+          tahunan: [
+            { id: uid(), title: "Natal", date: "" },
+            { id: uid(), title: "Bona Taon", date: "" },
+          ]
+        },
+        galeri: [],
+        dokumen: []
+      };
+    }
 
-        function hideAdminFeatures() {
-            document.getElementById('adminLoginBtn').classList.remove('hidden');
-            document.getElementById('adminLogoutBtn').classList.add('hidden');
-            
-            const adminElements = document.querySelectorAll('.admin-visible');
-            adminElements.forEach(el => {
-                el.classList.remove('admin-visible');
-                el.classList.add('admin-hidden');
-            });
-        }
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA));
+      } catch (e) {
+        alert("Penyimpanan penuh. Mohon hapus beberapa foto/dokumen atau gunakan ukuran lebih kecil.");
+      }
+    }
 
-        function forgotPassword() {
-            closeLoginModal();
-            const email = prompt('Masukkan email terdaftar untuk verifikasi:');
-            
-            if (!email) {
-                return; // User cancelled
-            }
-            
-            if (email.trim() === ADMIN_EMAIL) {
-                // Simulate email verification
-                const confirmReset = confirm('Kode verifikasi telah dikirim ke ' + ADMIN_EMAIL + '.\n\nKlik OK untuk melanjutkan reset password.');
-                
-                if (confirmReset) {
-                    const newPassword = prompt('Masukkan password baru (minimal 6 karakter):');
-                    
-                    if (newPassword && newPassword.length >= 6) {
-                        // Store new password (in real implementation, this would be hashed and stored securely)
-                        localStorage.setItem('adminNewPassword', newPassword);
-                        alert('Password berhasil direset!\n\nSilakan login dengan:\nEmail: ' + ADMIN_EMAIL + '\nPassword: (password baru yang Anda buat)');
-                        
-                        // Reopen login modal
-                        setTimeout(() => {
-                            openLoginModal();
-                        }, 500);
-                    } else if (newPassword !== null) {
-                        alert('Password minimal 6 karakter. Silakan coba lagi.');
-                        forgotPassword(); // Retry
-                    }
-                }
-            } else {
-                alert('Email tidak terdaftar sebagai admin.\n\nHanya pemilik akun ' + ADMIN_EMAIL + ' yang dapat mengakses fitur admin.');
-            }
-        }
+    function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-        // Navigation
-        function showSection(sectionName) {
-            // Hide all sections
-            const sections = document.querySelectorAll('.section-content');
-            sections.forEach(section => section.classList.add('hidden'));
-            
-            // Show selected section
-            document.getElementById(sectionName).classList.remove('hidden');
-            
-            // Update navigation
-            const navButtons = document.querySelectorAll('.nav-btn');
-            navButtons.forEach(btn => {
-                btn.classList.remove('border-b-2', 'border-red-600');
-                btn.classList.add('border-b-2', 'border-transparent');
-            });
-            event.target.classList.remove('border-transparent');
-            event.target.classList.add('border-red-600');
-        }
+    let DATA = loadData();
+    let isAdmin = localStorage.getItem("admin_demo") === "true";
 
-        // Firebase Upload Functions
-        async function uploadToFirebase(file, path) {
-            try {
-                const storageRef = storage.ref().child(path);
-                const snapshot = await storageRef.put(file);
-                const downloadURL = await snapshot.ref.getDownloadURL();
-                return downloadURL;
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Upload gagal. Menggunakan penyimpanan lokal.');
-                return null;
-            }
-        }
+    // --- Admin Gate ---
+    function applyAdminVisibility() {
+      $$(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
+      byId("adminBanner").classList.toggle("hidden", !isAdmin);
+    }
 
-        async function saveToFirestore(collection, data) {
-            try {
-                await firestore.collection(collection).doc('main').set(data, { merge: true });
-            } catch (error) {
-                console.error('Firestore error:', error);
-            }
-        }
+    function openAdminModal() {
+      byId("modalAdmin").classList.remove("hidden");
+      byId("adminEmail").value = "";
+      byId("adminMsg").classList.add("hidden");
+    }
+    function closeAdminModal() {
+      byId("modalAdmin").classList.add("hidden");
+    }
 
-        async function loadFromFirestore(collection) {
-            try {
-                const doc = await firestore.collection(collection).doc('main').get();
-                return doc.exists ? doc.data() : null;
-            } catch (error) {
-                console.error('Firestore load error:', error);
-                return null;
-            }
-        }
+    // --- Renderers ---
+    function renderHeader() {
+      const logoImg = byId("orgLogo");
+      const initials = byId("logoInitials");
+      if (DATA.logo) {
+        logoImg.src = DATA.logo;
+        logoImg.classList.remove("hidden");
+        initials.classList.add("hidden");
+      } else {
+        logoImg.classList.add("hidden");
+        initials.classList.remove("hidden");
+      }
+      const cover = byId("coverImage");
+      if (DATA.cover) {
+        cover.src = DATA.cover;
+        cover.classList.remove("hidden");
+      } else {
+        cover.classList.add("hidden");
+      }
+    }
 
-        // File upload handlers
-        document.getElementById('logoUpload').addEventListener('change', async function(e) {
-            if (!isAdminLoggedIn) return;
-            const file = e.target.files[0];
-            if (file) {
-                // Show loading
-                const logoContainer = document.getElementById('logoImage').parentElement;
-                logoContainer.innerHTML += '<div id="logoLoading" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"><i class="fas fa-spinner fa-spin text-white text-xl"></i></div>';
-                
-                // Upload to Firebase
-                const downloadURL = await uploadToFirebase(file, `images/logo-${Date.now()}`);
-                
-                if (downloadURL) {
-                    // Save to Firestore
-                    await saveToFirestore('settings', { logoURL: downloadURL });
-                    
-                    // Update UI
-                    document.getElementById('logoImage').src = downloadURL;
-                    document.getElementById('logoImage').classList.remove('hidden');
-                    document.getElementById('defaultLogo').classList.add('hidden');
-                    
-                    alert('Logo berhasil diupload dan tersimpan permanen!');
-                } else {
-                    // Fallback to local storage
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('logoImage').src = e.target.result;
-                        document.getElementById('logoImage').classList.remove('hidden');
-                        document.getElementById('defaultLogo').classList.add('hidden');
-                        localStorage.setItem('logoImage', e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-                
-                // Remove loading
-                const loading = document.getElementById('logoLoading');
-                if (loading) loading.remove();
-            }
+    function renderPengurus() {
+      const wrap = byId("listPengurus");
+      wrap.innerHTML = "";
+      DATA.pengurus.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "bg-white/5 border border-white/10 rounded-xl p-4 flex gap-4 items-center";
+        card.innerHTML = `
+          <div class="w-16 h-16 rounded-xl border border-white/10 overflow-hidden bg-black/40 flex-shrink-0 flex items-center justify-center">
+            ${p.photo ? `<img src="${p.photo}" alt="${p.name}" class="w-full h-full object-cover">` : `<span class="text-red-300 font-semibold">${initialsFromName(p.name)}</span>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-3">
+              <div class="truncate">
+                <div class="font-semibold">${p.name}</div>
+                <div class="text-white/70 text-sm">${p.role}</div>
+              </div>
+              <div class="admin-only hidden flex items-center gap-2">
+                <button data-act="foto" data-id="${p.id}" class="text-xs bg-white/10 hover:bg-white/15 border border-white/10 px-2 py-1 rounded">Foto</button>
+                <button data-act="edit" data-id="${p.id}" class="text-xs bg-white/10 hover:bg-white/15 border border-white/10 px-2 py-1 rounded">Edit</button>
+                <button data-act="hapus" data-id="${p.id}" class="text-xs bg-red-600 hover:bg-red-500 border border-red-400/60 px-2 py-1 rounded">Hapus</button>
+              </div>
+            </div>
+          </div>
+        `;
+        // Bind admin actions
+        card.querySelectorAll("[data-act]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-id");
+            const act = btn.getAttribute("data-act");
+            if (act === "edit") openPengurusModal(id);
+            if (act === "hapus") hapusPengurus(id);
+            if (act === "foto") unggahFotoPengurus(id);
+          });
+        });
+        wrap.appendChild(card);
+      });
+      applyAdminVisibility();
+    }
+
+    function initialsFromName(name) {
+      const parts = name.split(" ").filter(Boolean);
+      const first = parts[0]?.[0] || "P";
+      const last = parts[1]?.[0] || "P";
+      return (first + last).toUpperCase();
+    }
+
+    function renderProgram() {
+      const ulB = byId("programBulanan");
+      const ulT = byId("programTahunan");
+      ulB.innerHTML = "";
+      ulT.innerHTML = "";
+      const renderItem = (item, jenis) => {
+        const li = document.createElement("li");
+        li.className = "bg-black/30 border border-white/10 rounded-lg p-3 flex items-center justify-between";
+        li.innerHTML = `
+          <div>
+            <div class="font-medium">${item.title}</div>
+            <div class="text-white/60 text-xs">${item.date ? item.date : "Jadwal fleksibel"}</div>
+          </div>
+          <div class="admin-only hidden flex items-center gap-2">
+            <button data-act="edit" data-id="${item.id}" data-t="${jenis}" class="text-xs bg-white/10 hover:bg-white/15 border border-white/10 px-2 py-1 rounded">Edit</button>
+            <button data-act="hapus" data-id="${item.id}" data-t="${jenis}" class="text-xs bg-red-600 hover:bg-red-500 border border-red-400/60 px-2 py-1 rounded">Hapus</button>
+          </div>
+        `;
+        li.querySelectorAll("[data-act]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-id");
+            const t = btn.getAttribute("data-t");
+            const act = btn.getAttribute("data-act");
+            if (act === "edit") openProgramModal(id, t);
+            if (act === "hapus") hapusProgram(id, t);
+          });
+        });
+        return li;
+      };
+      DATA.program.bulanan.forEach(p => ulB.appendChild(renderItem(p, "bulanan")));
+      DATA.program.tahunan.forEach(p => ulT.appendChild(renderItem(p, "tahunan")));
+      applyAdminVisibility();
+    }
+
+    function renderGaleri() {
+      const grid = byId("gridGaleri");
+      grid.innerHTML = "";
+      DATA.galeri.forEach((src, idx) => {
+        const cell = document.createElement("div");
+        cell.className = "group relative rounded-xl overflow-hidden border border-white/10 bg-black/30";
+        cell.innerHTML = `
+          <img src="${src}" alt="Kegiatan" class="w-full h-40 md:h-44 object-cover cursor-pointer">
+          <div class="admin-only hidden absolute top-2 right-2 flex gap-2">
+            <button data-i="${idx}" class="btnDelFoto text-xs bg-red-600 hover:bg-red-500 border border-red-400/60 px-2 py-1 rounded">Hapus</button>
+          </div>
+        `;
+        cell.querySelector("img").addEventListener("click", () => openViewer(idx));
+        const del = cell.querySelector(".btnDelFoto");
+        if (del) del.addEventListener("click", (e) => { e.stopPropagation(); hapusFotoGaleri(idx); });
+        grid.appendChild(cell);
+      });
+      applyAdminVisibility();
+    }
+
+    function renderDokumen() {
+      const list = byId("listDokumen");
+      list.innerHTML = "";
+      DATA.dokumen.forEach(doc => {
+        const li = document.createElement("li");
+        li.className = "bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between";
+        const sizeText = doc.size ? prettyBytes(doc.size) : "";
+        const a = document.createElement("a");
+        a.href = doc.dataUrl;
+        a.download = doc.name || "dokumen";
+        a.className = "flex items-center gap-3";
+        a.innerHTML = `
+          <span class="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center">📄</span>
+          <span>
+            <span class="font-medium">${doc.name}</span>
+            <span class="block text-xs text-white/60">${sizeText}</span>
+          </span>
+        `;
+        const right = document.createElement("div");
+        right.className = "flex items-center gap-2";
+        const btnDownload = document.createElement("a");
+        btnDownload.href = doc.dataUrl;
+        btnDownload.download = doc.name || "dokumen";
+        btnDownload.className = "bg-white/10 hover:bg-white/15 border border-white/10 px-3 py-1.5 rounded text-sm";
+        btnDownload.textContent = "Unduh";
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "admin-only hidden bg-red-600 hover:bg-red-500 border border-red-400/60 px-3 py-1.5 rounded text-sm";
+        btnDelete.textContent = "Hapus";
+        btnDelete.addEventListener("click", () => {
+          if (confirm("Hapus dokumen ini?")) {
+            DATA.dokumen = DATA.dokumen.filter(d => d.id !== doc.id);
+            saveData();
+            renderDokumen();
+          }
         });
 
-        document.getElementById('heroUpload').addEventListener('change', async function(e) {
-            if (!isAdminLoggedIn) return;
-            const file = e.target.files[0];
-            if (file) {
-                // Show loading
-                const heroContainer = document.getElementById('heroImage').parentElement;
-                heroContainer.innerHTML += '<div id="heroLoading" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20"><i class="fas fa-spinner fa-spin text-white text-2xl"></i><span class="text-white ml-2">Mengupload...</span></div>';
-                
-                // Upload to Firebase
-                const downloadURL = await uploadToFirebase(file, `images/hero-${Date.now()}`);
-                
-                if (downloadURL) {
-                    // Save to Firestore
-                    await saveToFirestore('settings', { heroURL: downloadURL });
-                    
-                    // Update UI
-                    document.getElementById('heroImage').src = downloadURL;
-                    document.getElementById('heroImage').classList.remove('hidden');
-                    document.getElementById('defaultHero').classList.add('hidden');
-                    
-                    alert('Foto hero berhasil diupload dan tersimpan permanen!');
-                } else {
-                    // Fallback to local storage
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('heroImage').src = e.target.result;
-                        document.getElementById('heroImage').classList.remove('hidden');
-                        document.getElementById('defaultHero').classList.add('hidden');
-                        localStorage.setItem('heroImage', e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                }
-                
-                // Remove loading
-                const loading = document.getElementById('heroLoading');
-                if (loading) loading.remove();
+        li.appendChild(a);
+        right.appendChild(btnDownload);
+        right.appendChild(btnDelete);
+        li.appendChild(right);
+        list.appendChild(li);
+      });
+      applyAdminVisibility();
+    }
+
+    function prettyBytes(bytes) {
+      if (!bytes) return "";
+      const units = ['B','KB','MB','GB'];
+      let i = 0;
+      while (bytes >= 1024 && i < units.length-1) {
+        bytes /= 1024; i++;
+      }
+      return bytes.toFixed(1) + " " + units[i];
+    }
+
+    function renderAll() {
+      renderHeader();
+      renderPengurus();
+      renderProgram();
+      renderGaleri();
+      renderDokumen();
+      applyAdminVisibility();
+    }
+
+    // --- Modals (Generic) ---
+    function openBaseModal({title, contentHTML, onSave}) {
+      byId("modalTitle").textContent = title || "Form";
+      byId("modalContent").innerHTML = contentHTML || "";
+      byId("modalBase").classList.remove("hidden");
+      const saveBtn = byId("modalSave");
+      const cancel = () => { byId("modalBase").classList.add("hidden"); };
+      byId("modalCancel").onclick = cancel;
+      byId("closeBaseModal").onclick = cancel;
+      // remove previous listener
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      newSaveBtn.onclick = () => { if (onSave) onSave(cancel); };
+    }
+
+    // --- Pengurus Actions ---
+    function openPengurusModal(id=null) {
+      const roles = ["Dewan Penasehat", "Ketua", "Wakil Ketua", "Sekretaris", "Bendahara 1", "Bendahara 2", "Seksi Rohani", "Seksi Sosial", "Seksi Adat", "Humas", "Lainnya"];
+      const current = id ? DATA.pengurus.find(p => p.id === id) : { name:"", role:"", photo:null };
+      openBaseModal({
+        title: id ? "Edit Pengurus" : "Tambah Pengurus",
+        contentHTML: `
+          <label class="block text-sm mb-1">Nama</label>
+          <input id="fNama" type="text" value="${escapeHtml(current.name)}" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+          <label class="block text-sm mt-3 mb-1">Jabatan</label>
+          <select id="fRole" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+            ${roles.map(r => `<option ${r===current.role?'selected':''}>${r}</option>`).join("")}
+          </select>
+          <div class="mt-3">
+            <label class="block text-sm mb-1">Foto (opsional)</label>
+            <input id="fFoto" type="file" accept="image/*" class="w-full text-sm">
+          </div>
+        `,
+        onSave: async (close) => {
+          const name = byId("fNama").value.trim();
+          const role = byId("fRole").value;
+          if (!name) { alert("Nama wajib diisi."); return; }
+          let photo = current.photo;
+          const file = byId("fFoto").files[0];
+          if (file) photo = await fileToDataURL(file);
+          if (id) {
+            Object.assign(current, { name, role, photo });
+          } else {
+            DATA.pengurus.push({ id: uid(), name, role, photo: photo || null });
+          }
+          saveData();
+          renderPengurus();
+          close();
+        }
+      });
+    }
+
+    function hapusPengurus(id) {
+      if (!confirm("Hapus pengurus ini?")) return;
+      DATA.pengurus = DATA.pengurus.filter(p => p.id !== id);
+      saveData();
+      renderPengurus();
+    }
+
+    async function unggahFotoPengurus(id) {
+      // Create a quick invisible input for this action
+      const input = document.createElement("input");
+      input.type = "file"; input.accept = "image/*";
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+        const p = DATA.pengurus.find(x => x.id === id);
+        p.photo = await fileToDataURL(file);
+        saveData();
+        renderPengurus();
+      };
+      input.click();
+    }
+
+    // --- Program Actions ---
+    function openProgramModal(id=null, jenis="bulanan") {
+      const cur = id ? DATA.program[jenis].find(p => p.id === id) : { title:"", date:"" };
+      openBaseModal({
+        title: id ? "Edit Program" : "Tambah Program",
+        contentHTML: `
+          <label class="block text-sm mb-1">Jenis</label>
+          <select id="fJenis" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+            <option ${jenis==="bulanan"?'selected':''} value="bulanan">Bulanan</option>
+            <option ${jenis==="tahunan"?'selected':''} value="tahunan">Tahunan</option>
+          </select>
+          <label class="block text-sm mt-3 mb-1">Nama Kegiatan</label>
+          <input id="fJudul" type="text" value="${escapeHtml(cur.title)}" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+          <label class="block text-sm mt-3 mb-1">Jadwal (opsional)</label>
+          <input id="fTanggal" type="text" placeholder="misal: setiap Sabtu pertama / 25 Des" value="${escapeHtml(cur.date || "")}" class="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-red-500">
+        `,
+        onSave: (close) => {
+          const j = byId("fJenis").value;
+          const title = byId("fJudul").value.trim();
+          const date = byId("fTanggal").value.trim();
+          if (!title) { alert("Nama kegiatan wajib diisi."); return; }
+          if (id) {
+            const ref = DATA.program[jenis].find(p => p.id === id);
+            Object.assign(ref, { title, date });
+            if (j !== jenis) {
+              // move across list
+              DATA.program[jenis] = DATA.program[jenis].filter(p => p.id !== id);
+              DATA.program[j].push(ref);
             }
-        });
-
-        document.getElementById('galleryUpload').addEventListener('change', async function(e) {
-            if (!isAdminLoggedIn) return;
-            const files = e.target.files;
-            const galleryContent = document.getElementById('galleryContent');
-            
-            if (files.length > 0) {
-                // Show loading
-                galleryContent.innerHTML = '<div class="col-span-3 text-center py-8"><i class="fas fa-spinner fa-spin text-red-600 text-3xl mb-4"></i><p class="text-gray-600">Mengupload foto ke server...</p></div>';
-                
-                const galleryImages = [];
-                
-                for (let file of files) {
-                    try {
-                        // Upload to Firebase
-                        const downloadURL = await uploadToFirebase(file, `gallery/gallery-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-                        
-                        if (downloadURL) {
-                            galleryImages.push({
-                                url: downloadURL,
-                                name: file.name,
-                                uploadDate: new Date().toISOString()
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Gallery upload error:', error);
-                    }
-                }
-                
-                // Save to Firestore
-                if (galleryImages.length > 0) {
-                    const existingGallery = await loadFromFirestore('gallery');
-                    const allImages = existingGallery?.images || [];
-                    allImages.push(...galleryImages);
-                    
-                    await saveToFirestore('gallery', { images: allImages });
-                    
-                    // Update UI
-                    displayGallery(allImages);
-                    alert(`${galleryImages.length} foto berhasil diupload dan tersimpan permanen!`);
-                } else {
-                    // Fallback to local display
-                    galleryContent.innerHTML = '';
-                    Array.from(files).forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const div = document.createElement('div');
-                            div.className = 'relative group';
-                            div.innerHTML = `
-                                <img src="${e.target.result}" alt="Foto Kegiatan" class="w-full h-48 object-cover rounded-lg shadow-md">
-                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
-                                    <button onclick="removeGalleryImage(this)" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700">
-                                        <i class="fas fa-trash mr-1"></i>Hapus
-                                    </button>
-                                </div>
-                            `;
-                            galleryContent.appendChild(div);
-                        };
-                        reader.readAsDataURL(file);
-                    });
-                }
-            }
-        });
-
-        document.getElementById('documentUpload').addEventListener('change', function(e) {
-            if (!isAdminLoggedIn) return;
-            const files = e.target.files;
-            const documentsContent = document.getElementById('documentsContent');
-            
-            if (files.length > 0) {
-                documentsContent.innerHTML = '';
-                Array.from(files).forEach(file => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-gray-50 p-4 rounded-lg flex items-center justify-between';
-                    div.innerHTML = `
-                        <div class="flex items-center space-x-3">
-                            <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
-                            <div>
-                                <h5 class="font-medium text-gray-900">${file.name}</h5>
-                                <p class="text-sm text-gray-600">Ukuran: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="downloadDocument('${file.name}')" class="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700">
-                                <i class="fas fa-download mr-1"></i>Download
-                            </button>
-                            <button onclick="removeDocument(this)" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700">
-                                <i class="fas fa-trash mr-1"></i>Hapus
-                            </button>
-                        </div>
-                    `;
-                    documentsContent.appendChild(div);
-                });
-            }
-        });
-
-        // Gallery display function
-        function displayGallery(images) {
-            const galleryContent = document.getElementById('galleryContent');
-            
-            if (!images || images.length === 0) {
-                galleryContent.innerHTML = `
-                    <div class="bg-gray-100 rounded-lg p-8 text-center">
-                        <i class="fas fa-images text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-600">Belum ada foto kegiatan</p>
-                        <p class="text-sm text-gray-500 mt-2">Admin dapat mengunggah foto melalui tombol Upload Foto</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            galleryContent.innerHTML = '';
-            images.forEach((image, index) => {
-                const div = document.createElement('div');
-                div.className = 'relative group';
-                div.innerHTML = `
-                    <img src="${image.url}" alt="Foto Kegiatan" class="w-full h-48 object-cover rounded-lg shadow-md">
-                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
-                        <button onclick="removeGalleryImagePermanent(${index})" class="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 ${isAdminLoggedIn ? '' : 'hidden'}">
-                            <i class="fas fa-trash mr-1"></i>Hapus
-                        </button>
-                    </div>
-                `;
-                galleryContent.appendChild(div);
-            });
+          } else {
+            DATA.program[j].push({ id: uid(), title, date });
+          }
+          saveData();
+          renderProgram();
+          close();
         }
+      });
+    }
 
-        // Admin functions
-        function editStructure() {
-            if (!isAdminLoggedIn) return;
-            alert('Fitur edit struktur organisasi akan membuka form untuk mengedit nama dan jabatan pengurus.');
+    function hapusProgram(id, jenis) {
+      if (!confirm("Hapus program ini?")) return;
+      DATA.program[jenis] = DATA.program[jenis].filter(p => p.id !== id);
+      saveData();
+      renderProgram();
+    }
+
+    // --- Galeri Actions ---
+    function tambahFotoGaleri(files) {
+      const tasks = Array.from(files).slice(0, 20).map(file => fileToDataURL(file));
+      Promise.all(tasks).then(urls => {
+        DATA.galeri.push(...urls);
+        saveData();
+        renderGaleri();
+      });
+    }
+    function hapusFotoGaleri(idx) {
+      if (!confirm("Hapus foto ini?")) return;
+      DATA.galeri.splice(idx,1);
+      saveData();
+      renderGaleri();
+    }
+
+    // --- Dokumen Actions ---
+    function tambahDokumen(file) {
+      fileToDataURL(file).then(url => {
+        DATA.dokumen.push({ id: uid(), name: file.name, size: file.size, dataUrl: url });
+        saveData();
+        renderDokumen();
+      });
+    }
+
+    // --- File Utils ---
+    function fileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function escapeHtml(str="") {
+      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    }
+
+    // --- Gallery Viewer ---
+    let viewerIndex = 0;
+    function openViewer(idx) {
+      if (!DATA.galeri.length) return;
+      viewerIndex = idx;
+      byId("viewerImg").src = DATA.galeri[viewerIndex];
+      byId("viewer").classList.remove("hidden");
+      document.body.classList.add("viewer-open");
+    }
+    function closeViewer() {
+      byId("viewer").classList.add("hidden");
+      document.body.classList.remove("viewer-open");
+    }
+    function nextViewer(step=1) {
+      if (!DATA.galeri.length) return;
+      viewerIndex = (viewerIndex + step + DATA.galeri.length) % DATA.galeri.length;
+      byId("viewerImg").src = DATA.galeri[viewerIndex];
+    }
+
+    // --- Events Bind ---
+    function bindEvents() {
+      byId("btnAdmin").addEventListener("click", openAdminModal);
+      byId("closeAdminModal").addEventListener("click", closeAdminModal);
+      byId("btnAdminBatal").addEventListener("click", closeAdminModal);
+      byId("btnAdminMasuk").addEventListener("click", () => {
+        const email = byId("adminEmail").value.trim().toLowerCase();
+        if (email === ADMIN_EMAIL.toLowerCase()) {
+          isAdmin = true;
+          localStorage.setItem("admin_demo", "true");
+          applyAdminVisibility();
+          closeAdminModal();
+        } else {
+          byId("adminMsg").classList.remove("hidden");
         }
+      });
+      byId("btnLogout").addEventListener("click", () => {
+        isAdmin = false;
+        localStorage.removeItem("admin_demo");
+        applyAdminVisibility();
+      });
 
-        function editPrograms() {
-            if (!isAdminLoggedIn) return;
-            alert('Fitur edit program akan membuka form untuk menambah, mengedit, atau menghapus program kegiatan.');
-        }
+      // Logo
+      byId("btnUploadLogo").addEventListener("click", () => byId("inputLogo").click());
+      byId("inputLogo").addEventListener("change", async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        DATA.logo = await fileToDataURL(f);
+        saveData(); renderHeader();
+      });
 
-        function uploadGallery() {
-            if (!isAdminLoggedIn) return;
-            document.getElementById('galleryUpload').click();
-        }
+      // Cover
+      byId("btnUploadCover").addEventListener("click", () => byId("inputCover").click());
+      byId("inputCover").addEventListener("change", async (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        DATA.cover = await fileToDataURL(f);
+        saveData(); renderHeader();
+      });
 
-        function uploadDocument() {
-            if (!isAdminLoggedIn) return;
-            document.getElementById('documentUpload').click();
-        }
+      // Pengurus
+      byId("btnTambahPengurus").addEventListener("click", () => openPengurusModal());
 
-        async function removeGalleryImagePermanent(index) {
-            if (!isAdminLoggedIn) return;
-            if (confirm('Hapus foto ini secara permanen?')) {
-                try {
-                    const galleryData = await loadFromFirestore('gallery');
-                    if (galleryData && galleryData.images) {
-                        galleryData.images.splice(index, 1);
-                        await saveToFirestore('gallery', { images: galleryData.images });
-                        displayGallery(galleryData.images);
-                        alert('Foto berhasil dihapus secara permanen!');
-                    }
-                } catch (error) {
-                    console.error('Remove error:', error);
-                    alert('Gagal menghapus foto.');
-                }
-            }
-        }
+      // Program
+      byId("btnTambahProgram").addEventListener("click", () => openProgramModal(null, "bulanan"));
 
-        function removeGalleryImage(button) {
-            if (!isAdminLoggedIn) return;
-            if (confirm('Hapus foto ini?')) {
-                button.closest('.relative').remove();
-            }
-        }
+      // Galeri
+      byId("btnTambahFoto").addEventListener("click", () => byId("inputFotoGaleri").click());
+      byId("inputFotoGaleri").addEventListener("change", (e) => {
+        if (e.target.files.length) tambahFotoGaleri(e.target.files);
+      });
 
-        function removeDocument(button) {
-            if (!isAdminLoggedIn) return;
-            if (confirm('Hapus dokumen ini?')) {
-                button.closest('.bg-gray-50').remove();
-            }
-        }
+      // Dokumen
+      byId("btnUploadDok").addEventListener("click", () => byId("inputDokumen").click());
+      byId("inputDokumen").addEventListener("change", (e) => {
+        const f = e.target.files[0];
+        if (f) tambahDokumen(f);
+      });
 
-        function downloadDocument(filename) {
-            alert('Download dokumen: ' + filename);
-            // In real implementation, this would trigger actual file download
-        }
+      // Viewer
+      byId("viewerClose").addEventListener("click", closeViewer);
+      byId("viewerPrev").addEventListener("click", () => nextViewer(-1));
+      byId("viewerNext").addEventListener("click", () => nextViewer(1));
+      window.addEventListener("keydown", (e) => {
+        if (byId("viewer").classList.contains("hidden")) return;
+        if (e.key === "Escape") closeViewer();
+        if (e.key === "ArrowRight") nextViewer(1);
+        if (e.key === "ArrowLeft") nextViewer(-1);
+      });
+    }
 
-        // Load data from Firebase on page load
-        async function loadWebsiteData() {
-            try {
-                // Load settings (logo, hero)
-                const settings = await loadFromFirestore('settings');
-                if (settings) {
-                    if (settings.logoURL) {
-                        document.getElementById('logoImage').src = settings.logoURL;
-                        document.getElementById('logoImage').classList.remove('hidden');
-                        document.getElementById('defaultLogo').classList.add('hidden');
-                    }
-                    if (settings.heroURL) {
-                        document.getElementById('heroImage').src = settings.heroURL;
-                        document.getElementById('heroImage').classList.remove('hidden');
-                        document.getElementById('defaultHero').classList.add('hidden');
-                    }
-                }
-
-                // Load gallery
-                const galleryData = await loadFromFirestore('gallery');
-                if (galleryData && galleryData.images) {
-                    displayGallery(galleryData.images);
-                }
-            } catch (error) {
-                console.log('Loading from local storage as fallback...');
-                // Fallback to localStorage
-                const logoImage = localStorage.getItem('logoImage');
-                if (logoImage) {
-                    document.getElementById('logoImage').src = logoImage;
-                    document.getElementById('logoImage').classList.remove('hidden');
-                    document.getElementById('defaultLogo').classList.add('hidden');
-                }
-                
-                const heroImage = localStorage.getItem('heroImage');
-                if (heroImage) {
-                    document.getElementById('heroImage').src = heroImage;
-                    document.getElementById('heroImage').classList.remove('hidden');
-                    document.getElementById('defaultHero').classList.add('hidden');
-                }
-            }
-        }
-
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            showSection('home');
-            loadWebsiteData();
-        });
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ab5c9d54a2807d',t:'MTc1NDQ1MDA0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    // --- Init ---
+    (function init() {
+      byId("year").textContent = new Date().getFullYear();
+      bindEvents();
+      renderAll();
+    })();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96af3c4f41e47855',t:'MTc1NDQ5MDY2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
